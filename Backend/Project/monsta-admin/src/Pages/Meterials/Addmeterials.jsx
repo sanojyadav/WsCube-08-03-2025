@@ -2,29 +2,78 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Breadcrumb from "../../common/Breadcrumb";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Addmaterials() {
 
+  const navigate = useNavigate();
+
+  const [materailDetails, setMaterialDetails] = useState('');
+
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
   const onSubmit = (data) => {
-    console.log(data);
+    if(updateIdState){
+      axios.put(`http://localhost:5000/api/admin/materials/update/${updateId}`, data)
+    .then((response) => {
+      if(response.data._status == true){
+        toast.success(response.data._message);
+        navigate('/material/view');
+      } else {
+        toast.error(response.data._message);
+      }        
+    })
+    .catch((error) => {
+        toast.error('Something went wrong !!')
+    });
+    } else {
+      axios.post('http://localhost:5000/api/admin/materials/create', data)
+      .then((response) => {
+        if(response.data._status == true){
+          toast.success(response.data._message);
+          navigate('/material/view');
+        } else {
+          toast.error(response.data._message);
+        }        
+      })
+      .catch((error) => {
+          toast.error('Something went wrong !!')
+      });
+    }
+    
   };
 
   // update work
   const [updateIdState,setUpdateIdState]=useState(false)
+
   let updateId=useParams().id
   useEffect(()=>{
     if(updateId==undefined){
       setUpdateIdState(false)
-    }
-    else{
+    } else{
       setUpdateIdState(true)
+
+      axios.post(`http://localhost:5000/api/admin/materials/details/${ updateId }`)
+      .then((response) => {
+        if(response.data._status == true){
+          setMaterialDetails(response.data._data);
+          setValue('name', response.data._data.name);
+          setValue('order', response.data._data.order);
+        } else {
+          toast.error(response.data._message);
+        }        
+      })
+      .catch((error) => {
+          toast.error('Something went wrong !!')
+      });
+      
     }
   },[updateId])
 
@@ -46,16 +95,17 @@ export default function Addmaterials() {
                     htmlFor="Name"
                     className="block  text-md font-medium text-gray-900"
                   >
-                    Category Name
+                    Material Name
                   </label>
                   <input
                     type="text"
-                    {...register("Name", { required: "Material name is required" })}
+                    defaultValue={materailDetails.name}
+                    {...register("name", { required: "Material name is required" })}
                     id="Name"
                     className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                     placeholder="Material Name"
                   />
-                  {errors.Name && <p className="text-red-500">{errors.Name.message}</p>}
+                  {errors.name && <p className="text-red-500">{errors.name.message}</p>}
                 </div>
                 <div className="mb-5">
                   <label
@@ -66,6 +116,7 @@ export default function Addmaterials() {
                   </label>
                   <input
                     type="number"
+                    defaultValue={materailDetails.order}
                     {...register("order", { required: "Order is required" })}
                     id="order"
                     className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"

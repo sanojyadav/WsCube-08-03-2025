@@ -1,4 +1,4 @@
-const materialSchema = require('../../models/material');
+const parentCategoriesSchema = require('../../models/parentCategories');
 const mongodb = require('mongodb');
 
 //  For Create Data
@@ -8,8 +8,12 @@ exports.create = async(request,response) => {
         name : request.body.name,
         order : request.body.order,
     }
+
+    if(request.file){
+        dataSave.image = request.file.filename;
+    }
     
-    await new materialSchema(dataSave).save()
+    await new parentCategoriesSchema(dataSave).save()
     .then((resp) => {
         const result = {
             _status : true,
@@ -64,9 +68,11 @@ exports.view = async(request,response) => {
         condition.name = nameRegex;
     }
 
-    var totalRecords = await materialSchema.find(condition).select('name status order').countDocuments();
+    var totalRecords = await parentCategoriesSchema.find(condition).select('name status order').countDocuments();
+
+    console.log(request.port);
     
-    await materialSchema.find(condition).select('name status order')
+    await parentCategoriesSchema.find(condition).select('name image status order')
     .limit(limit).skip(skip)
     .sort({
         _id : 'desc'
@@ -76,6 +82,7 @@ exports.view = async(request,response) => {
             const result = {
                 _status : true,
                 _message : 'Record inserted succussfully',
+                image_path : `${request.protocol}://${request.get('host')}/uploads/categories/`,
                 'total_records' : totalRecords,
                 'total_pages' : Math.ceil(totalRecords / limit),
                 _data :  resp
@@ -107,7 +114,7 @@ exports.view = async(request,response) => {
 //  For Details Data
 exports.details = async (request,response) => {
 
-    await materialSchema.findOne({
+    await parentCategoriesSchema.findOne({
         deleted_at : null,
         _id : request.params.id
     })
@@ -116,6 +123,7 @@ exports.details = async (request,response) => {
             const result = {
                 _status : true,
                 _message : 'Record fetch succussfully',
+                image_path : `${request.protocol}://${request.get('host')}/uploads/categories/`,
                 _data :  resp
             }
         
@@ -149,8 +157,12 @@ exports.update = async(request,response) => {
         name : request.body.name,
         order : request.body.order,
     }
+
+    if(request.file){
+        dataSave.image = request.file.filename
+    }
     
-    await materialSchema.updateOne({
+    await parentCategoriesSchema.updateOne({
         _id : request.params.id
     },
     {
@@ -160,6 +172,7 @@ exports.update = async(request,response) => {
         const result = {
             _status : true,
             _message : 'Record updated succussfully',
+            image_path : `${request.protocol}://${request.get('host')}/uploads/categories/`,
             _data :  resp
         }
     
@@ -188,7 +201,7 @@ exports.update = async(request,response) => {
 
 //  For Change Status Data
 exports.changeStatus = async(request,response) => {
-    await materialSchema.updateMany(
+    await parentCategoriesSchema.updateMany(
         {
             _id : {
                 $in : request.body.ids
@@ -226,7 +239,7 @@ exports.changeStatus = async(request,response) => {
 //  For Delete Data
 exports.destroy = async(request,response) => {
 
-    await materialSchema.updateMany(
+    await parentCategoriesSchema.updateMany(
         {
             _id : {
                 $in : request.body.ids
