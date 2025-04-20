@@ -6,6 +6,10 @@ const schema = new mongoose.Schema({
         match: /^[a-z A-Z]{2,20}$/,
         required : [true, 'Name is required'],
     },
+    parent_category_id : {
+        type : String,
+        required : [true, 'Parent categroy is required'],
+    },
     image : {
         type : String,
         default:  '',
@@ -38,6 +42,6 @@ const schema = new mongoose.Schema({
     }
 });
 
-const model = mongoose.model('parent_categories',schema);
+const model = mongoose.model('sub_categories',schema);
 
 module.exports = model;
