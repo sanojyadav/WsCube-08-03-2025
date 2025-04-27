@@ -6,6 +6,14 @@ const schema = new mongoose.Schema({
         match: /^[a-z A-Z]{2,20}$/,
         required : [true, 'Name is required'],
     },
+    sub_category_id : {
+        type : Array,
+        ref : "sub_categories"
+    },
+    product_id : {
+        type : Array,
+        ref : "products"
+    },
     image : {
         type : String,
         default:  '',

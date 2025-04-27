@@ -81,24 +81,46 @@ exports.view = async(request,response) => {
 
     skip = (page - 1) * limit;
 
-    const condition = {
-        deleted_at : null,
+    const addCondition = [
+        {
+            deleted_at : null, 
+        }
+    ];
+
+    const orCondition = [];
+
+    if(request.body.status != undefined){
+        if(request.body.status != ''){
+            orCondition.push({ status : request.body.status })
+        }
     }
 
-    if(request.body.status){
-        condition.status = request.body.status;
+    if(request.body.parent_category_id != undefined){
+        if(request.body.parent_category_id != ''){
+            orCondition.push({ _id : request.body.parent_category_id })
+        }
     }
 
-    if(request.body.name != '' && request.body.name != undefined){
-        var nameRegex = new RegExp(request.body.name,"i");
-        condition.name = nameRegex;
+    if(request.body.name != undefined){
+        if(request.body.name != ''){
+            var nameRegex = new RegExp(request.body.name,"i");
+            orCondition.push({ name : nameRegex })
+        }
     }
-
-    var totalRecords = await parentCategoriesSchema.find(condition).select('name status order').countDocuments();
-
-    console.log(request.port);
     
-    await parentCategoriesSchema.find(condition).select('name image status order')
+    if(addCondition.length > 0){
+        var filter = { $and : addCondition }
+    } else {
+        var filter = {}
+    }
+    
+    if(orCondition.length > 0){
+        filter.$or = orCondition;
+    }
+
+    var totalRecords = await parentCategoriesSchema.find(filter).select('name status order').countDocuments();
+
+    await parentCategoriesSchema.find(filter).select('name image status order')
     .limit(limit).skip(skip)
     .sort({
         _id : 'desc'

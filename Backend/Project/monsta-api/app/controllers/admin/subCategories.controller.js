@@ -1,4 +1,5 @@
 const subCategoriesSchema = require('../../models/subCategories');
+const parentCategoriesSchema = require('../../models/parentCategories');
 const mongodb = require('mongodb');
 const slugify = require("slugify");
 
@@ -37,7 +38,16 @@ exports.create = async(request,response) => {
     }
     
     await new subCategoriesSchema(dataSave).save()
-    .then((resp) => {
+    .then(async(resp) => {
+
+        await parentCategoriesSchema.updateOne(
+            { 
+                _id : request.body.parent_category_id
+            }, 
+            { 
+                $push: { sub_category_id: { $each: [resp._id] } } 
+            });
+
         const result = {
             _status : true,
             _message : 'Record inserted succussfully',
@@ -47,6 +57,7 @@ exports.create = async(request,response) => {
         response.send(result);
     })
     .catch((error) => {
+        console.log(error);
         var error_messages = [];
         var errorKey = {};
 
@@ -90,6 +101,10 @@ exports.view = async(request,response) => {
         condition.status = request.body.status;
     }
 
+    if(request.body.parent_category_id){
+        condition.parent_category_id = request.body.parent_category_id;
+    }
+
     if(request.body.name != '' && request.body.name != undefined){
         var nameRegex = new RegExp(request.body.name,"i");
         condition.name = nameRegex;
@@ -98,6 +113,9 @@ exports.view = async(request,response) => {
     var totalRecords = await subCategoriesSchema.find(condition).select('name parent_category_id status order').countDocuments();
  
     await subCategoriesSchema.find(condition).select('name parent_category_id image status order')
+    // .populate('parent_category_id')
+    // .populate('parent_category_id', 'name')
+    .populate({ path: 'parent_category_id', select: 'name' })
     .limit(limit).skip(skip)
     .sort({
         _id : 'desc'

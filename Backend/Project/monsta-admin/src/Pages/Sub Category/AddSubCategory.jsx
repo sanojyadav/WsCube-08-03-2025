@@ -48,7 +48,8 @@ export default function AddSubCategory() {
   useEffect(() => {
     var filterData = {
       limit: 1000,
-      status: 1
+      status: 1,
+      parent_category_id : categoryDetails.parent_category_id
     };
 
     axios.post('http://localhost:5000/api/admin/parent-categories/view', toFormData(filterData))
@@ -60,7 +61,7 @@ export default function AddSubCategory() {
       .catch((error) => {
         toast.error('Something went wrong !!')
       })
-  }, []);
+  }, [categoryDetails]);
 
   //Dropify Method
   useEffect(() => {
@@ -183,7 +184,7 @@ export default function AddSubCategory() {
                     {
                       parentCategories.map((v, i) => {
                         return (
-                          <option value={v._id}>{v.name}</option>
+                          <option value={v._id}  selected={ (categoryDetails.parent_category_id == v._id) ? 'selected' : '' }  >{v.name}</option>
                         )
                       })
                     }

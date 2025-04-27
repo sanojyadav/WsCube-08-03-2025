@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { MdFilterAltOff, MdModeEdit, MdModeEditOutline } from 'react-icons/md';
 import { CiEdit } from 'react-icons/ci';
 import { FaFilter } from 'react-icons/fa';
-import axios from 'axios'
+import axios, { toFormData } from 'axios'
 import { toast } from 'react-toastify'
 import { Pagination } from "flowbite-react";
 
@@ -12,18 +12,37 @@ export default function ViewCategory() {
 
   let [activeFilter, setactiveFilter] = useState(true);
   let [filterName, setFilterName] = useState('');
+  let [filterParentCategory, setFilterParentCategory] = useState('');
   var [categories, setCategories] = useState([]);
   let [checkBoxValues, setCheckBoxValues] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [apiStatus, setApiStatus] = useState(true);
   const [imagePath, setImagePath] = useState('');
+  const [parentCategories, setParentCategories] = useState([]);
 
   const onPageChange = (page) => setCurrentPage(page);
 
   useEffect(() => {
+    var filterData = {
+      limit: 1000,
+    };
+
+    axios.post('http://localhost:5000/api/admin/parent-categories/view', toFormData(filterData))
+      .then((result) => {
+        if (result.data._status) {
+          setParentCategories(result.data._data);
+        }
+      })
+      .catch((error) => {
+        toast.error('Something went wrong !!')
+      })
+  }, []);
+
+  useEffect(() => {
     axios.post('http://localhost:5000/api/admin/sub-categories/view', {
-      name: filterName
+      name: filterName,
+      parent_category_id : filterParentCategory
     })
       .then((response) => {
         setCategories(response.data._data);
@@ -33,10 +52,14 @@ export default function ViewCategory() {
       .catch((error) => {
         toast.error('Something went wrong !!')
       });
-  }, [filterName, apiStatus]);
+  }, [filterName, apiStatus, filterParentCategory]);
 
   const filter = (event) => {
     setFilterName(event.target.value);
+  }
+
+  const filterCategory = (event) => {
+    setFilterParentCategory(event.target.value);
   }
 
   const selectCheckBox = (id) => {
@@ -118,26 +141,30 @@ export default function ViewCategory() {
         <form className="grid grid-cols-[40%_35%_5%] gap-[1%] items-center ">
           <div className="">
 
-            <select
+            <select onChange={ filterCategory }
               name="parentCatSelectBox"
               className="border  border-gray-300 text-gray-900  text-sm rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-3"
             >
               <option value="">Select Parent Category</option>
-              <option value="Mens">Men's</option>
-              <option value="Women">Women</option>
-              <option value="Sale">Sale</option>
+              {
+                  parentCategories.map((v, i) => {
+                    return (
+                      <option value={v._id}>{v.name}</option>
+                    )
+                  })
+                }
             </select>
           </div>
           <div className="">
             <input
-              type="text"
+              type="text" onKeyUp={filter}
               id="simple-search"
               className="border  border-gray-300 text-gray-900  text-sm rounded-lg focus:ring-gray-500 focus:border-gray-500 block w-full p-3"
               placeholder="Search  name..."
               required
             />
           </div>
-          <div className=''>
+          {/* <div className=''>
             <button
               type="submit"
               className="p-2.5 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -159,7 +186,7 @@ export default function ViewCategory() {
               </svg>
               <span className="sr-only">Search</span>
             </button>
-          </div>
+          </div> */}
 
 
 
@@ -235,7 +262,13 @@ export default function ViewCategory() {
                                   <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
                                 </div>
                               </td>
-                              <td class="px-6 py-4">{v.parent_category_id}
+                              <td class="px-6 py-4">{
+                                (v.parent_category_id.name)
+                                ?
+                                v.parent_category_id.name
+                                :
+                                'N/A'
+                              }
                               </td>
                               <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
 
