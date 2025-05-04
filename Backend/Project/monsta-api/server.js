@@ -3,8 +3,7 @@ const mongodb = require('mongodb');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
-var jwt = require('jsonwebtoken');
-var secretKey = '123456789';
+
 
 const server = express();   //To Create Exucatable Function 
 
@@ -19,12 +18,6 @@ server.use(bodyParser.json());
 server.use(cors());
 
 server.get('/',(request,response) => {
-
-    var token = jwt.sign({ data : 'Welcome to WsCubeTech' }, secretKey);
-
-
-    var verify = jwt.verify(token,secretKey);
-    response.send(verify.data);
     response.send('Server is working fine.');
 })
 
@@ -42,12 +35,17 @@ require('./app/routes/admin/product.routes.js')(server);
 
 // Website Routes URL
 require('./app/routes/website/parentCategories.routes.js')(server);
+require('./app/routes/website/user.routes.js')(server);
+
 
 server.get('*',(request,response) => {
     response.send('page not found.');
 })
 
-mongoose.connect('mongodb://127.0.0.1:27017/ecommerce_online').then(() => {
+
+
+
+mongoose.connect('mongodb+srv://sandeepbhati:ndqLiG6CtrYxNZpQ@sandeep.ktfb1.mongodb.net/?retryWrites=true&w=majority&appName=sandeep').then(() => {
     server.listen(5000,() => {
         console.log('Server is working fine.');
     })
